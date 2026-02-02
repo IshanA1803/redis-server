@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netinet/in.h>
+#include <cstring>
 
 RedisServer::RedisServer(int port)
     : port(port), server_socket(-1), running(true) {}
@@ -23,13 +24,13 @@ void RedisServer::run() {
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.s_addr = INADDR_ANY;
-    
+
     if (bind(server_socket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
         std::cerr << "Error binding server socket\n";
         close(server_socket);
         return;
     }
-    
+
     if (listen(server_socket, 10) < 0) {
         std::cerr << "Error listening on server socket\n";
         close(server_socket);
@@ -45,7 +46,16 @@ void RedisServer::run() {
             break;
         }
 
-        // Immediately close client
+        char buffer[1024];
+        memset(buffer, 0, sizeof(buffer));
+
+        int bytes = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+        if (bytes > 0) {
+            // Static RESP response for initial testing
+            const char* response = "+OK\r\n";
+            send(client_socket, response, strlen(response), 0);
+        }
+        
         close(client_socket);
     }
 
