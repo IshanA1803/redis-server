@@ -1,5 +1,5 @@
 #include "../include/RedisServer.h"
-
+#include "../include/RedisCommandHandler.h"
 #include <iostream>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -45,15 +45,17 @@ void RedisServer::run() {
             std::cerr << "Error accepting client connection\n";
             break;
         }
+        
+        RedisCommandHandler handler;
 
         char buffer[1024];
         memset(buffer, 0, sizeof(buffer));
 
         int bytes = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
         if (bytes > 0) {
-            // Static RESP response for initial testing
-            const char* response = "+OK\r\n";
-            send(client_socket, response, strlen(response), 0);
+            std::string request(buffer, bytes);
+            std::string response = handler.processCommand(request);
+            send(client_socket, response.c_str(), response.size(), 0);
         }
         
         close(client_socket);
