@@ -1,5 +1,5 @@
 #include "../include/RedisCommandHandler.h"
-
+#include "../include/RedisDatabase.h"
 #include <vector>
 #include <sstream>
 #include <algorithm>
@@ -51,6 +51,24 @@ static std::string handleEcho(const std::vector<std::string>& tokens) {
     return "+" + tokens[1] + "\r\n";
 }
 
+static std::string handleSet(const std::vector<std::string>& tokens, RedisDatabase& db) {
+    if (tokens.size() < 3)
+        return "-Error: SET requires key and value\r\n";
+    db.set(tokens[1], tokens[2]);
+    return "+OK\r\n";
+}
+
+static std::string handleGet(const std::vector<std::string>& tokens, RedisDatabase& db) {
+    if (tokens.size() < 2)
+        return "-Error: GET requires key\r\n";
+
+    std::string value;
+    if (db.get(tokens[1], value))
+        return "$" + std::to_string(value.size()) + "\r\n" + value + "\r\n";
+
+    return "$-1\r\n";
+}
+
 RedisCommandHandler::RedisCommandHandler() {}
 
 std::string RedisCommandHandler::processCommand(const std::string& commandLine) {
@@ -61,10 +79,16 @@ std::string RedisCommandHandler::processCommand(const std::string& commandLine) 
     std::string cmd = tokens[0];
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
 
+    RedisDatabase& db = RedisDatabase::getInstance();
+
     if (cmd == "PING")
         return handlePing(tokens);
     else if (cmd == "ECHO")
         return handleEcho(tokens);
+    else if (cmd == "SET")
+        return handleSet(tokens, db);
+    else if (cmd == "GET")
+        return handleGet(tokens, db);
     else
         return "-Error: Unknown command\r\n";
 }
