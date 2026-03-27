@@ -20,3 +20,24 @@ bool RedisDatabase::get(const std::string& key, std::string& value) {
     }
     return false;
 }
+
+std::vector<std::string> RedisDatabase::keys() {
+    std::lock_guard<std::mutex> lock(db_mutex);
+    std::vector<std::string> result;
+    for (const auto& pair : kv_store) {
+        result.push_back(pair.first);
+    }
+    return result;
+}
+
+std::string RedisDatabase::type(const std::string& key) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+    if (kv_store.find(key) != kv_store.end())
+        return "string";
+    return "none";
+}
+
+bool RedisDatabase::del(const std::string& key) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+    return kv_store.erase(key) > 0;
+}

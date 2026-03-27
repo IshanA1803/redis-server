@@ -69,6 +69,33 @@ static std::string handleGet(const std::vector<std::string>& tokens, RedisDataba
     return "$-1\r\n";
 }
 
+static std::string handleKeys(const std::vector<std::string>&, RedisDatabase& db) {
+    auto allKeys = db.keys();
+    std::ostringstream oss;
+
+    oss << "*" << allKeys.size() << "\r\n";
+    for (const auto& key : allKeys) {
+        oss << "$" << key.size() << "\r\n" << key << "\r\n";
+    }
+
+    return oss.str();
+}
+
+static std::string handleType(const std::vector<std::string>& tokens, RedisDatabase& db) {
+    if (tokens.size() < 2)
+        return "-Error: TYPE requires key\r\n";
+
+    return "+" + db.type(tokens[1]) + "\r\n";
+}
+
+static std::string handleDel(const std::vector<std::string>& tokens, RedisDatabase& db) {
+    if (tokens.size() < 2)
+        return "-Error: DEL requires key\r\n";
+
+    bool res = db.del(tokens[1]);
+    return ":" + std::to_string(res ? 1 : 0) + "\r\n";
+}
+
 RedisCommandHandler::RedisCommandHandler() {}
 
 std::string RedisCommandHandler::processCommand(const std::string& commandLine) {
@@ -89,6 +116,12 @@ std::string RedisCommandHandler::processCommand(const std::string& commandLine) 
         return handleSet(tokens, db);
     else if (cmd == "GET")
         return handleGet(tokens, db);
+    else if (cmd == "KEYS")
+        return handleKeys(tokens, db);
+    else if (cmd == "TYPE")
+        return handleType(tokens, db);
+    else if (cmd == "DEL")
+        return handleDel(tokens, db);
     else
         return "-Error: Unknown command\r\n";
 }
