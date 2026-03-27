@@ -96,6 +96,21 @@ static std::string handleDel(const std::vector<std::string>& tokens, RedisDataba
     return ":" + std::to_string(res ? 1 : 0) + "\r\n";
 }
 
+static std::string handleFlushAll(const std::vector<std::string>&, RedisDatabase& db) {
+    db.flushAll();
+    return "+OK\r\n";
+}
+
+static std::string handleRename(const std::vector<std::string>& tokens, RedisDatabase& db) {
+    if (tokens.size() < 3)
+        return "-Error: RENAME requires old key and new key\r\n";
+
+    if (db.rename(tokens[1], tokens[2]))
+        return "+OK\r\n";
+
+    return "-Error: Key not found or rename failed\r\n";
+}
+
 RedisCommandHandler::RedisCommandHandler() {}
 
 std::string RedisCommandHandler::processCommand(const std::string& commandLine) {
@@ -122,6 +137,10 @@ std::string RedisCommandHandler::processCommand(const std::string& commandLine) 
         return handleType(tokens, db);
     else if (cmd == "DEL")
         return handleDel(tokens, db);
+    else if (cmd == "FLUSHALL")
+        return handleFlushAll(tokens, db);
+    else if (cmd == "RENAME")
+        return handleRename(tokens, db);
     else
         return "-Error: Unknown command\r\n";
 }

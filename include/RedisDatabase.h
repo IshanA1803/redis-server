@@ -15,6 +15,8 @@ public:
     std::vector<std::string> keys();
     std::string type(const std::string& key);
     bool del(const std::string& key);
+    bool flushAll();
+    bool rename(const std::string& oldKey, const std::string& newKey);
 
 private:
     RedisDatabase() = default;

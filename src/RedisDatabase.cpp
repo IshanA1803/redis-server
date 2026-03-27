@@ -41,3 +41,21 @@ bool RedisDatabase::del(const std::string& key) {
     std::lock_guard<std::mutex> lock(db_mutex);
     return kv_store.erase(key) > 0;
 }
+
+bool RedisDatabase::flushAll() {
+    std::lock_guard<std::mutex> lock(db_mutex);
+    kv_store.clear();
+    return true;
+}
+
+bool RedisDatabase::rename(const std::string& oldKey, const std::string& newKey) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    auto it = kv_store.find(oldKey);
+    if (it == kv_store.end())
+        return false;
+
+    kv_store[newKey] = it->second;
+    kv_store.erase(it);
+    return true;
+}
