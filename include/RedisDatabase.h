@@ -21,6 +21,8 @@ public:
     void rpush(const std::string& key, const std::string& value);
     ssize_t llen(const std::string& key);
     std::vector<std::string> lget(const std::string& key);
+    bool lpop(const std::string& key, std::string& value);
+    bool rpop(const std::string& key, std::string& value);
 
 private:
     RedisDatabase() = default;

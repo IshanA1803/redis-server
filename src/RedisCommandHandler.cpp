@@ -158,6 +158,28 @@ static std::string handleLlen(const std::vector<std::string>& tokens, RedisDatab
     return ":" + std::to_string(len) + "\r\n";
 }
 
+static std::string handleLpop(const std::vector<std::string>& tokens, RedisDatabase& db) {
+    if (tokens.size() < 2)
+        return "-Error: LPOP requires key\r\n";
+
+    std::string val;
+    if (db.lpop(tokens[1], val))
+        return "$" + std::to_string(val.size()) + "\r\n" + val + "\r\n";
+
+    return "$-1\r\n";
+}
+
+static std::string handleRpop(const std::vector<std::string>& tokens, RedisDatabase& db) {
+    if (tokens.size() < 2)
+        return "-Error: RPOP requires key\r\n";
+
+    std::string val;
+    if (db.rpop(tokens[1], val))
+        return "$" + std::to_string(val.size()) + "\r\n" + val + "\r\n";
+
+    return "$-1\r\n";
+}
+
 RedisCommandHandler::RedisCommandHandler() {}
 
 std::string RedisCommandHandler::processCommand(const std::string& commandLine) {
@@ -196,6 +218,10 @@ std::string RedisCommandHandler::processCommand(const std::string& commandLine) 
         return handleLget(tokens, db);
     else if (cmd == "LLEN")
         return handleLlen(tokens, db);
+    else if (cmd == "LPOP")
+        return handleLpop(tokens, db);
+    else if (cmd == "RPOP")
+        return handleRpop(tokens, db);
     else
         return "-Error: Unknown command\r\n";
 }

@@ -86,3 +86,29 @@ std::vector<std::string> RedisDatabase::lget(const std::string& key) {
     }
     return {};
 }
+
+bool RedisDatabase::lpop(const std::string& key, std::string& value) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    auto it = list_store.find(key);
+    if (it != list_store.end() && !it->second.empty()) {
+        value = it->second.front();
+        it->second.erase(it->second.begin());
+        return true;
+    }
+
+    return false;
+}
+
+bool RedisDatabase::rpop(const std::string& key, std::string& value) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    auto it = list_store.find(key);
+    if (it != list_store.end() && !it->second.empty()) {
+        value = it->second.back();
+        it->second.pop_back();
+        return true;
+    }
+
+    return false;
+}
