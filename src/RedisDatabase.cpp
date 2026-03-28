@@ -1,5 +1,5 @@
 #include "../include/RedisDatabase.h"
-
+#include <algorithm>
 // Singleton accessor
 RedisDatabase& RedisDatabase::getInstance() {
     static RedisDatabase instance;
@@ -149,4 +149,47 @@ bool RedisDatabase::lset(const std::string& key, int index, const std::string& v
 
     lst[index] = value;
     return true;
+}
+
+int RedisDatabase::lrem(const std::string& key, int count, const std::string& value) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    int removed = 0;
+    auto it = list_store.find(key);
+    if (it == list_store.end())
+        return 0;
+
+    auto& lst = it->second;
+
+    if (count == 0) {
+        // Remove all occurrences
+        auto new_end = std::remove(lst.begin(), lst.end(), value);//remove only moves elements, doesn't actually erase them
+        removed = std::distance(new_end, lst.end()); 
+        lst.erase(new_end, lst.end());
+    } else if (count > 0) {
+        // Remove from head
+        for (auto iter = lst.begin(); iter != lst.end() && removed < count; ) {
+            if (*iter == value) {
+                iter = lst.erase(iter); // erase returns the next iterator
+                ++removed;
+            } else {
+                ++iter;
+            }
+        }
+    } else {
+        // Remove from tail
+        for (auto riter = lst.rbegin(); riter != lst.rend() && removed < (-count); ) {
+            if (*riter == value) {
+                auto fwd = riter.base();
+                --fwd; // base() returns the next element, so we need to step back to get the correct one
+                fwd = lst.erase(fwd);
+                ++removed;
+                riter = std::reverse_iterator<std::vector<std::string>::iterator>(fwd);
+            } else {
+                ++riter;
+            }
+        }
+    }
+
+    return removed;
 }

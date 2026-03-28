@@ -213,6 +213,19 @@ static std::string handleLset(const std::vector<std::string>& tokens, RedisDatab
     }
 }
 
+static std::string handleLrem(const std::vector<std::string>& tokens, RedisDatabase& db) {
+    if (tokens.size() < 4)
+        return "-Error: LREM requires key, count and value\r\n";
+
+    try {
+        int count = std::stoi(tokens[2]);
+        int removed = db.lrem(tokens[1], count, tokens[3]);
+        return ":" + std::to_string(removed) + "\r\n";
+    } catch (...) {
+        return "-Error: Invalid count\r\n";
+    }
+}
+
 RedisCommandHandler::RedisCommandHandler() {}
 
 std::string RedisCommandHandler::processCommand(const std::string& commandLine) {
@@ -259,6 +272,8 @@ std::string RedisCommandHandler::processCommand(const std::string& commandLine) 
         return handleLindex(tokens, db);
     else if (cmd == "LSET")
         return handleLset(tokens, db);
+    else if (cmd == "LREM")
+        return handleLrem(tokens, db);
     else
         return "-Error: Unknown command\r\n";
 }
