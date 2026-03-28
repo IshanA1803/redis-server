@@ -17,6 +17,9 @@ public:
     bool del(const std::string& key);
     bool flushAll();
     bool rename(const std::string& oldKey, const std::string& newKey);
+    void lpush(const std::string& key, const std::string& value);
+    void rpush(const std::string& key, const std::string& value);
+    ssize_t llen(const std::string& key);
 
 private:
     RedisDatabase() = default;
@@ -27,6 +30,7 @@ private:
 
     std::mutex db_mutex;
     std::unordered_map<std::string, std::string> kv_store;
+    std::unordered_map<std::string, std::vector<std::string>> list_store;
 };
 
 #endif

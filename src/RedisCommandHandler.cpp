@@ -111,6 +111,30 @@ static std::string handleRename(const std::vector<std::string>& tokens, RedisDat
     return "-Error: Key not found or rename failed\r\n";
 }
 
+static std::string handleLpush(const std::vector<std::string>& tokens, RedisDatabase& db) {
+    if (tokens.size() < 3)
+        return "-Error: LPUSH requires key and value\r\n";
+
+    for (size_t i = 2; i < tokens.size(); ++i) {
+        db.lpush(tokens[1], tokens[i]);
+    }
+
+    ssize_t len = db.llen(tokens[1]);
+    return ":" + std::to_string(len) + "\r\n";
+}
+
+static std::string handleRpush(const std::vector<std::string>& tokens, RedisDatabase& db) {
+    if (tokens.size() < 3)
+        return "-Error: RPUSH requires key and value\r\n";
+
+    for (size_t i = 2; i < tokens.size(); ++i) {
+        db.rpush(tokens[1], tokens[i]);
+    }
+
+    ssize_t len = db.llen(tokens[1]);
+    return ":" + std::to_string(len) + "\r\n";
+}
+
 RedisCommandHandler::RedisCommandHandler() {}
 
 std::string RedisCommandHandler::processCommand(const std::string& commandLine) {
@@ -141,6 +165,10 @@ std::string RedisCommandHandler::processCommand(const std::string& commandLine) 
         return handleFlushAll(tokens, db);
     else if (cmd == "RENAME")
         return handleRename(tokens, db);
+    else if (cmd == "LPUSH")
+        return handleLpush(tokens, db);
+    else if (cmd == "RPUSH")
+        return handleRpush(tokens, db);
     else
         return "-Error: Unknown command\r\n";
 }

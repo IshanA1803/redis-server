@@ -59,3 +59,21 @@ bool RedisDatabase::rename(const std::string& oldKey, const std::string& newKey)
     kv_store.erase(it);
     return true;
 }
+
+void RedisDatabase::lpush(const std::string& key, const std::string& value) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+    list_store[key].insert(list_store[key].begin(), value);
+}
+
+void RedisDatabase::rpush(const std::string& key, const std::string& value) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+    list_store[key].push_back(value);
+}
+
+ssize_t RedisDatabase::llen(const std::string& key) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+    auto it = list_store.find(key);
+    if (it != list_store.end())
+        return it->second.size();
+    return 0;
+}
