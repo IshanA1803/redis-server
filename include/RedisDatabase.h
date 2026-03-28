@@ -20,6 +20,7 @@ public:
     void lpush(const std::string& key, const std::string& value);
     void rpush(const std::string& key, const std::string& value);
     ssize_t llen(const std::string& key);
+    std::vector<std::string> lget(const std::string& key);
 
 private:
     RedisDatabase() = default;

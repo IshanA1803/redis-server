@@ -135,6 +135,29 @@ static std::string handleRpush(const std::vector<std::string>& tokens, RedisData
     return ":" + std::to_string(len) + "\r\n";
 }
 
+static std::string handleLget(const std::vector<std::string>& tokens, RedisDatabase& db) {
+    if (tokens.size() < 2)
+        return "-Error: LGET requires a key\r\n";
+
+    auto elems = db.lget(tokens[1]);
+    std::ostringstream oss;
+
+    oss << "*" << elems.size() << "\r\n";
+    for (const auto& e : elems) {
+        oss << "$" << e.size() << "\r\n" << e << "\r\n";
+    }
+
+    return oss.str();
+}
+
+static std::string handleLlen(const std::vector<std::string>& tokens, RedisDatabase& db) {
+    if (tokens.size() < 2)
+        return "-Error: LLEN requires key\r\n";
+
+    ssize_t len = db.llen(tokens[1]);
+    return ":" + std::to_string(len) + "\r\n";
+}
+
 RedisCommandHandler::RedisCommandHandler() {}
 
 std::string RedisCommandHandler::processCommand(const std::string& commandLine) {
@@ -169,6 +192,10 @@ std::string RedisCommandHandler::processCommand(const std::string& commandLine) 
         return handleLpush(tokens, db);
     else if (cmd == "RPUSH")
         return handleRpush(tokens, db);
+    else if (cmd == "LGET")
+        return handleLget(tokens, db);
+    else if (cmd == "LLEN")
+        return handleLlen(tokens, db);
     else
         return "-Error: Unknown command\r\n";
 }
