@@ -23,6 +23,8 @@ public:
     std::vector<std::string> lget(const std::string& key);
     bool lpop(const std::string& key, std::string& value);
     bool rpop(const std::string& key, std::string& value);
+    bool lindex(const std::string& key, int index, std::string& value);
+    bool lset(const std::string& key, int index, const std::string& value);
 
 private:
     RedisDatabase() = default;

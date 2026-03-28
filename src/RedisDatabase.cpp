@@ -112,3 +112,41 @@ bool RedisDatabase::rpop(const std::string& key, std::string& value) {
 
     return false;
 }
+
+bool RedisDatabase::lindex(const std::string& key, int index, std::string& value) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    auto it = list_store.find(key);
+    if (it == list_store.end())
+        return false;
+
+    const auto& lst = it->second;
+
+    if (index < 0)
+        index = lst.size() + index;
+
+    if (index < 0 || index >= static_cast<int>(lst.size()))
+        return false;
+
+    value = lst[index];
+    return true;
+}
+
+bool RedisDatabase::lset(const std::string& key, int index, const std::string& value) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    auto it = list_store.find(key);
+    if (it == list_store.end())
+        return false;
+
+    auto& lst = it->second;
+
+    if (index < 0)
+        index = lst.size() + index;
+
+    if (index < 0 || index >= static_cast<int>(lst.size()))
+        return false;
+
+    lst[index] = value;
+    return true;
+}

@@ -180,6 +180,39 @@ static std::string handleRpop(const std::vector<std::string>& tokens, RedisDatab
     return "$-1\r\n";
 }
 
+static std::string handleLindex(const std::vector<std::string>& tokens, RedisDatabase& db) {
+    if (tokens.size() < 3)
+        return "-Error: LINDEX requires key and index\r\n";
+
+    try {
+        int index = std::stoi(tokens[2]); // stoi() can throw if the input is not a valid integer
+        std::string value;
+
+        if (db.lindex(tokens[1], index, value))
+            return "$" + std::to_string(value.size()) + "\r\n" + value + "\r\n";
+
+        return "$-1\r\n";
+    } catch (...) {
+        return "-Error: Invalid index\r\n";
+    }
+}
+
+static std::string handleLset(const std::vector<std::string>& tokens, RedisDatabase& db) {
+    if (tokens.size() < 4)
+        return "-Error: LSET requires key, index and value\r\n";
+
+    try {
+        int index = std::stoi(tokens[2]);
+
+        if (db.lset(tokens[1], index, tokens[3]))
+            return "+OK\r\n";
+
+        return "-Error: Index out of range\r\n";
+    } catch (...) {
+        return "-Error: Invalid index\r\n";
+    }
+}
+
 RedisCommandHandler::RedisCommandHandler() {}
 
 std::string RedisCommandHandler::processCommand(const std::string& commandLine) {
@@ -222,6 +255,10 @@ std::string RedisCommandHandler::processCommand(const std::string& commandLine) 
         return handleLpop(tokens, db);
     else if (cmd == "RPOP")
         return handleRpop(tokens, db);
+    else if (cmd == "LINDEX")
+        return handleLindex(tokens, db);
+    else if (cmd == "LSET")
+        return handleLset(tokens, db);
     else
         return "-Error: Unknown command\r\n";
 }
