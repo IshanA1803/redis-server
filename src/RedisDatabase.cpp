@@ -334,3 +334,21 @@ bool RedisDatabase::hmset(const std::string& key,
 
     return true;
 }
+
+bool RedisDatabase::expire(const std::string& key, int seconds) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    bool exists =
+        (kv_store.find(key) != kv_store.end()) ||
+        (list_store.find(key) != list_store.end()) ||
+        (hash_store.find(key) != hash_store.end());
+
+    if (!exists)
+        return false;
+
+    expiry_map[key] =
+        std::chrono::steady_clock::now() +
+        std::chrono::seconds(seconds);
+
+    return true;
+}

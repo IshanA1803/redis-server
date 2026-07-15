@@ -347,6 +347,24 @@ static std::string handleHmset(const std::vector<std::string>& tokens,RedisDatab
     return "+OK\r\n";
 }
 
+static std::string handleExpire(const std::vector<std::string>& tokens,RedisDatabase& db) {
+
+    if (tokens.size() < 3)
+        return "-Error: EXPIRE requires key and time in seconds\r\n";
+
+    try {
+        int seconds = std::stoi(tokens[2]);
+
+        if (db.expire(tokens[1], seconds))
+            return "+OK\r\n";
+
+        return "-Error: Key not found\r\n";
+
+    } catch (const std::exception&) {
+        return "-Error: Invalid expiration time\r\n";
+    }
+}
+
 RedisCommandHandler::RedisCommandHandler() {}
 
 std::string RedisCommandHandler::processCommand(const std::string& commandLine) {
@@ -413,6 +431,8 @@ std::string RedisCommandHandler::processCommand(const std::string& commandLine) 
         return handleHgetall(tokens, db);
     else if (cmd == "HMSET")
         return handleHmset(tokens, db);
+    else if (cmd == "EXPIRE")
+        return handleExpire(tokens, db);
     else
         return "-Error: Unknown command\r\n";
 }
