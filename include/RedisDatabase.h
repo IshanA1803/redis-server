@@ -42,7 +42,9 @@ public:
 
     bool expire(const std::string& key, int seconds);
     void purgeExpired();
+
     bool dump(const std::string& filename);
+    bool load(const std::string& filename);
 
 private:
     RedisDatabase() = default;
