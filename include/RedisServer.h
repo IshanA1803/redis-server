@@ -13,6 +13,7 @@ private:
     int port;
     int server_socket;
     std::atomic<bool> running;
+    void setupSignalHandler();
 };
 
 #endif
