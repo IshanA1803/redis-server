@@ -1,5 +1,6 @@
 #include "../include/RedisServer.h"
 #include "../include/RedisCommandHandler.h"
+#include "../include/RedisDatabase.h"
 #include <iostream>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -62,4 +63,20 @@ void RedisServer::run() {
     }
 
     close(server_socket);
+}
+
+void RedisServer::shutdown() {
+    running = false;
+
+    if (server_socket != -1) {
+
+        if (RedisDatabase::getInstance().dump("dump.my_rdb"))
+            std::cout << "Database Dumped to dump.my_rdb\n";
+        else
+            std::cerr << "Error dumping database\n";
+
+        close(server_socket);
+    }
+
+    std::cout << "Server Shutdown Complete!\n";
 }
