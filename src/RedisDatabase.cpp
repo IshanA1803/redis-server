@@ -234,3 +234,38 @@ bool RedisDatabase::hdel(const std::string& key,const std::string& field) {
 
     return false;
 }
+
+std::vector<std::string> RedisDatabase::hkeys(const std::string& key) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    std::vector<std::string> fields;
+    auto it = hash_store.find(key);
+
+    if (it != hash_store.end()) {
+        for (const auto& pair : it->second)
+            fields.push_back(pair.first);
+    }
+
+    return fields;
+}
+
+std::vector<std::string> RedisDatabase::hvals(const std::string& key) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    std::vector<std::string> values;
+    auto it = hash_store.find(key);
+
+    if (it != hash_store.end()) {
+        for (const auto& pair : it->second)
+            values.push_back(pair.second);
+    }
+
+    return values;
+}
+
+ssize_t RedisDatabase::hlen(const std::string& key) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    auto it = hash_store.find(key);
+    return (it != hash_store.end()) ? it->second.size() : 0;
+}

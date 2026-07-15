@@ -32,6 +32,9 @@ public:
     bool hget(const std::string& key,const std::string& field,std::string& value);
     bool hexists(const std::string& key,const std::string& field);
     bool hdel(const std::string& key,const std::string& field);
+    std::vector<std::string> hkeys(const std::string& key);
+    std::vector<std::string> hvals(const std::string& key);
+    ssize_t hlen(const std::string& key);
 
 private:
     RedisDatabase() = default;

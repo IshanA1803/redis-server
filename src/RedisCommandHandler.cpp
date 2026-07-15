@@ -266,6 +266,47 @@ static std::string handleHdel(const std::vector<std::string>& tokens,RedisDataba
     return ":" + std::to_string(removed ? 1 : 0) + "\r\n";
 }
 
+static std::string handleHlen(const std::vector<std::string>& tokens,RedisDatabase& db) {
+
+    if (tokens.size() < 2)
+        return "-Error: HLEN requires key\r\n";
+
+    ssize_t len = db.hlen(tokens[1]);
+    return ":" + std::to_string(len) + "\r\n";
+}
+
+static std::string handleHkeys(const std::vector<std::string>& tokens,RedisDatabase& db) {
+
+    if (tokens.size() < 2)
+        return "-Error: HKEYS requires key\r\n";
+
+    auto keys = db.hkeys(tokens[1]);
+
+    std::ostringstream oss;
+    oss << "*" << keys.size() << "\r\n";
+
+    for (const auto& key : keys)
+        oss << "$" << key.size() << "\r\n" << key << "\r\n";
+
+    return oss.str();
+}
+
+static std::string handleHvals(const std::vector<std::string>& tokens,RedisDatabase& db) {
+
+    if (tokens.size() < 2)
+        return "-Error: HVALS requires key\r\n";
+
+    auto values = db.hvals(tokens[1]);
+
+    std::ostringstream oss;
+    oss << "*" << values.size() << "\r\n";
+
+    for (const auto& value : values)
+        oss << "$" << value.size() << "\r\n" << value << "\r\n";
+
+    return oss.str();
+}
+
 RedisCommandHandler::RedisCommandHandler() {}
 
 std::string RedisCommandHandler::processCommand(const std::string& commandLine) {
@@ -322,6 +363,12 @@ std::string RedisCommandHandler::processCommand(const std::string& commandLine) 
         return handleHexists(tokens, db);
     else if (cmd == "HDEL")
         return handleHdel(tokens, db);
+    else if (cmd == "HLEN")
+        return handleHlen(tokens, db);
+    else if (cmd == "HKEYS")
+        return handleHkeys(tokens, db);
+    else if (cmd == "HVALS")
+        return handleHvals(tokens, db);
     else
         return "-Error: Unknown command\r\n";
 }
