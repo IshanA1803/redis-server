@@ -269,3 +269,23 @@ ssize_t RedisDatabase::hlen(const std::string& key) {
     auto it = hash_store.find(key);
     return (it != hash_store.end()) ? it->second.size() : 0;
 }
+
+std::unordered_map<std::string, std::string> RedisDatabase::hgetall(const std::string& key) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    if (hash_store.find(key) != hash_store.end())
+        return hash_store[key];
+
+    return {};
+}
+
+bool RedisDatabase::hmset(const std::string& key,
+    const std::vector<std::pair<std::string, std::string>>& fieldValues) {
+
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    for (const auto& pair : fieldValues)
+        hash_store[key][pair.first] = pair.second;
+
+    return true;
+}

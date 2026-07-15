@@ -307,6 +307,46 @@ static std::string handleHvals(const std::vector<std::string>& tokens,RedisDatab
     return oss.str();
 }
 
+static std::string handleHgetall(const std::vector<std::string>& tokens,RedisDatabase& db) {
+
+    if (tokens.size() < 2)
+        return "-Error: HGETALL requires key\r\n";
+
+    auto hash = db.hgetall(tokens[1]);
+
+    std::ostringstream oss;
+    oss << "*" << hash.size() * 2 << "\r\n";
+
+    for (const auto& pair : hash) {
+        oss << "$" << pair.first.size()
+            << "\r\n"
+            << pair.first
+            << "\r\n";
+
+        oss << "$" << pair.second.size()
+            << "\r\n"
+            << pair.second
+            << "\r\n";
+    }
+
+    return oss.str();
+}
+
+static std::string handleHmset(const std::vector<std::string>& tokens,RedisDatabase& db) {
+
+    if (tokens.size() < 4 || (tokens.size() % 2) == 1)
+        return "-Error: HMSET requires key followed by field value pairs\r\n";
+
+    std::vector<std::pair<std::string, std::string>> fieldValues;
+
+    for (size_t i = 2; i < tokens.size(); i += 2)
+        fieldValues.emplace_back(tokens[i], tokens[i + 1]);
+
+    db.hmset(tokens[1], fieldValues);
+
+    return "+OK\r\n";
+}
+
 RedisCommandHandler::RedisCommandHandler() {}
 
 std::string RedisCommandHandler::processCommand(const std::string& commandLine) {
@@ -369,6 +409,10 @@ std::string RedisCommandHandler::processCommand(const std::string& commandLine) 
         return handleHkeys(tokens, db);
     else if (cmd == "HVALS")
         return handleHvals(tokens, db);
+    else if (cmd == "HGETALL")
+        return handleHgetall(tokens, db);
+    else if (cmd == "HMSET")
+        return handleHmset(tokens, db);
     else
         return "-Error: Unknown command\r\n";
 }

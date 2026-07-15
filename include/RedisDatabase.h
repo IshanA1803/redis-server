@@ -35,6 +35,9 @@ public:
     std::vector<std::string> hkeys(const std::string& key);
     std::vector<std::string> hvals(const std::string& key);
     ssize_t hlen(const std::string& key);
+    std::unordered_map<std::string, std::string>hgetall(const std::string& key);
+    bool hmset(const std::string& key,
+        const std::vector<std::pair<std::string, std::string>>& fieldValues);
 
 private:
     RedisDatabase() = default;
