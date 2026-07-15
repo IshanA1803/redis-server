@@ -246,6 +246,26 @@ static std::string handleHget(const std::vector<std::string>& tokens,RedisDataba
     return "$-1\r\n";
 }
 
+static std::string handleHexists(const std::vector<std::string>& tokens,RedisDatabase& db) {
+
+    if (tokens.size() < 3)
+        return "-Error: HEXISTS requires key and field\r\n";
+
+    bool exists = db.hexists(tokens[1], tokens[2]);
+
+    return ":" + std::to_string(exists ? 1 : 0) + "\r\n";
+}
+
+static std::string handleHdel(const std::vector<std::string>& tokens,RedisDatabase& db) {
+
+    if (tokens.size() < 3)
+        return "-Error: HDEL requires key and field\r\n";
+
+    bool removed = db.hdel(tokens[1], tokens[2]);
+
+    return ":" + std::to_string(removed ? 1 : 0) + "\r\n";
+}
+
 RedisCommandHandler::RedisCommandHandler() {}
 
 std::string RedisCommandHandler::processCommand(const std::string& commandLine) {
@@ -298,6 +318,10 @@ std::string RedisCommandHandler::processCommand(const std::string& commandLine) 
         return handleHset(tokens, db);
     else if (cmd == "HGET")
         return handleHget(tokens, db);
+    else if (cmd == "HEXISTS")
+        return handleHexists(tokens, db);
+    else if (cmd == "HDEL")
+        return handleHdel(tokens, db);
     else
         return "-Error: Unknown command\r\n";
 }

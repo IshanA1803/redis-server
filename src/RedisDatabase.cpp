@@ -214,3 +214,23 @@ bool RedisDatabase::hget(const std::string& key,const std::string& field,std::st
 
     return false;
 }
+
+bool RedisDatabase::hexists(const std::string& key,const std::string& field) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    auto it = hash_store.find(key);
+    if (it != hash_store.end())
+        return it->second.find(field) != it->second.end();
+
+    return false;
+}
+
+bool RedisDatabase::hdel(const std::string& key,const std::string& field) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    auto it = hash_store.find(key);
+    if (it != hash_store.end())
+        return it->second.erase(field) > 0;
+
+    return false;
+}

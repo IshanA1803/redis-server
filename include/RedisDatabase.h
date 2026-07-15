@@ -30,6 +30,8 @@ public:
     // Hash operations
     bool hset(const std::string& key,const std::string& field,const std::string& value);
     bool hget(const std::string& key,const std::string& field,std::string& value);
+    bool hexists(const std::string& key,const std::string& field);
+    bool hdel(const std::string& key,const std::string& field);
 
 private:
     RedisDatabase() = default;
