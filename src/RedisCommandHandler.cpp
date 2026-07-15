@@ -376,6 +376,7 @@ std::string RedisCommandHandler::processCommand(const std::string& commandLine) 
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
 
     RedisDatabase& db = RedisDatabase::getInstance();
+    db.purgeExpired(); // Purge expired keys before processing the command
 
     if (cmd == "PING")
         return handlePing(tokens);

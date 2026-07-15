@@ -41,6 +41,7 @@ public:
         const std::vector<std::pair<std::string, std::string>>& fieldValues);
 
     bool expire(const std::string& key, int seconds);
+    void purgeExpired();
 
 private:
     RedisDatabase() = default;

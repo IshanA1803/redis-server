@@ -102,6 +102,12 @@ bool RedisDatabase::rename(const std::string& oldKey,
         found = true;
     }
 
+    auto itExpire = expiry_map.find(oldKey);
+    if (itExpire != expiry_map.end()) {
+        expiry_map[newKey] = itExpire->second;
+        expiry_map.erase(itExpire);
+    }
+
     return found;
 }
 
@@ -351,4 +357,21 @@ bool RedisDatabase::expire(const std::string& key, int seconds) {
         std::chrono::seconds(seconds);
 
     return true;
+}
+
+void RedisDatabase::purgeExpired() {
+    auto now = std::chrono::steady_clock::now();
+
+    for (auto it = expiry_map.begin(); it != expiry_map.end();) {
+        if (now > it->second) {
+
+            kv_store.erase(it->first);
+            list_store.erase(it->first);
+            hash_store.erase(it->first);
+
+            it = expiry_map.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
