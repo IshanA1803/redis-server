@@ -1,5 +1,7 @@
 #include "../include/RedisDatabase.h"
 #include <algorithm>
+#include <fstream>
+
 // Singleton accessor
 RedisDatabase& RedisDatabase::getInstance() {
     static RedisDatabase instance;
@@ -374,4 +376,35 @@ void RedisDatabase::purgeExpired() {
             ++it;
         }
     }
+}
+
+bool RedisDatabase::dump(const std::string& filename) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    std::ofstream ofs(filename, std::ios::binary); //Binary mode to avoid issues with line endings on different platforms
+    if (!ofs)
+        return false;
+
+    for (const auto& kv : kv_store) {
+        ofs << "K " << kv.first << " " << kv.second << "\n";
+    }
+
+    for (const auto& kv : list_store) {
+        ofs << "L " << kv.first;
+        for (const auto& item : kv.second)
+            ofs << " " << item;
+        ofs << "\n";
+    }
+
+    for (const auto& kv : hash_store) {
+        ofs << "H " << kv.first;
+        for (const auto& field_val : kv.second)
+            ofs << " "
+                << field_val.first
+                << ":"
+                << field_val.second;
+        ofs << "\n";
+    }
+
+    return true;
 }
