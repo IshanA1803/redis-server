@@ -9,7 +9,7 @@
 class RedisDatabase {
 public:
     static RedisDatabase& getInstance();
-
+    // Key-value operations
     void set(const std::string& key, const std::string& value);
     bool get(const std::string& key, std::string& value);
     std::vector<std::string> keys();
@@ -17,6 +17,7 @@ public:
     bool del(const std::string& key);
     bool flushAll();
     bool rename(const std::string& oldKey, const std::string& newKey);
+    // List operations
     void lpush(const std::string& key, const std::string& value);
     void rpush(const std::string& key, const std::string& value);
     ssize_t llen(const std::string& key);
@@ -26,6 +27,9 @@ public:
     bool lindex(const std::string& key, int index, std::string& value);
     bool lset(const std::string& key, int index, const std::string& value);
     int lrem(const std::string& key, int count, const std::string& value);
+    // Hash operations
+    bool hset(const std::string& key,const std::string& field,const std::string& value);
+    bool hget(const std::string& key,const std::string& field,std::string& value);
 
 private:
     RedisDatabase() = default;
@@ -37,6 +41,7 @@ private:
     std::mutex db_mutex;
     std::unordered_map<std::string, std::string> kv_store;
     std::unordered_map<std::string, std::vector<std::string>> list_store;
+    std::unordered_map<std::string,std::unordered_map<std::string, std::string>> hash_store;
 };
 
 #endif

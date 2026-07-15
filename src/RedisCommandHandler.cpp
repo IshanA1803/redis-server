@@ -226,6 +226,26 @@ static std::string handleLrem(const std::vector<std::string>& tokens, RedisDatab
     }
 }
 
+static std::string handleHset(const std::vector<std::string>& tokens,RedisDatabase& db) {
+    if (tokens.size() < 4)
+        return "-Error: HSET requires key, field and value\r\n";
+
+    db.hset(tokens[1], tokens[2], tokens[3]);
+    return ":1\r\n";
+}
+
+static std::string handleHget(const std::vector<std::string>& tokens,RedisDatabase& db) {
+    if (tokens.size() < 3)
+        return "-Error: HGET requires key and field\r\n";
+
+    std::string value;
+    if (db.hget(tokens[1], tokens[2], value))
+        return "$" + std::to_string(value.size()) + "\r\n" +
+               value + "\r\n";
+
+    return "$-1\r\n";
+}
+
 RedisCommandHandler::RedisCommandHandler() {}
 
 std::string RedisCommandHandler::processCommand(const std::string& commandLine) {
@@ -274,6 +294,10 @@ std::string RedisCommandHandler::processCommand(const std::string& commandLine) 
         return handleLset(tokens, db);
     else if (cmd == "LREM")
         return handleLrem(tokens, db);
+    else if (cmd == "HSET")
+        return handleHset(tokens, db);
+    else if (cmd == "HGET")
+        return handleHget(tokens, db);
     else
         return "-Error: Unknown command\r\n";
 }

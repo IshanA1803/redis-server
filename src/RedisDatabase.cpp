@@ -193,3 +193,24 @@ int RedisDatabase::lrem(const std::string& key, int count, const std::string& va
 
     return removed;
 }
+
+bool RedisDatabase::hset(const std::string& key,const std::string& field,const std::string& value) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+    hash_store[key][field] = value;
+    return true;
+}
+
+bool RedisDatabase::hget(const std::string& key,const std::string& field,std::string& value) {
+    std::lock_guard<std::mutex> lock(db_mutex);
+
+    auto it = hash_store.find(key);
+    if (it != hash_store.end()) {
+        auto f = it->second.find(field);
+        if (f != it->second.end()) {
+            value = f->second;
+            return true;
+        }
+    }
+
+    return false;
+}
