@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <cstring>
 #include <signal.h>
+#include <thread>
 
 // Global pointer for signal handling
 static RedisServer* globalServer = nullptr;
@@ -61,29 +62,51 @@ void RedisServer::run() {
 
     std::cout << "Server listening on port " << port << "\n";
 
+    std::vector<std::thread> threads;
+    RedisCommandHandler cmdHandler;
+
     while (running) {
         int client_socket = accept(server_socket, nullptr, nullptr);
         if (client_socket < 0) {
             std::cerr << "Error accepting client connection\n";
             break;
         }
-        
-        RedisCommandHandler handler;
+        threads.emplace_back([client_socket, &cmdHandler]() {
+            char buffer[1024];
 
-        char buffer[1024];
-        memset(buffer, 0, sizeof(buffer));
-
-        int bytes = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
-        if (bytes > 0) {
-            std::string request(buffer, bytes);
-            std::string response = handler.processCommand(request);
-            send(client_socket, response.c_str(), response.size(), 0);
-        }
+            while (true) {
+                memset(buffer, 0, sizeof(buffer));
+            
+                int bytes = recv(client_socket,
+                                 buffer,
+                                 sizeof(buffer) - 1,
+                                 0);
+                
+                if (bytes <= 0)
+                    break;
+                
+                std::string request(buffer, bytes);
+                
+                std::string response =
+                    cmdHandler.processCommand(request);
+                
+                send(client_socket,response.c_str(),response.size(),0);
+            }
         
-        close(client_socket);
+            close(client_socket);
+        });
+    }
+
+    for (auto& t : threads) {
+        if (t.joinable())t.join();
     }
 
     close(server_socket);
+    
+    if (RedisDatabase::getInstance().dump("dump.my_rdb"))
+        std::cout << "Database Dumped to dump.my_rdb\n";
+    else 
+        std::cerr << "Error dumping database\n";
 }
 
 void RedisServer::shutdown() {
